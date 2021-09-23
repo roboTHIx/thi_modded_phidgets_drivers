@@ -1,0 +1,83 @@
+<!-- Phidgets Motors launch file -->
+<launch>
+  #### Parameters for motor driver hub ######################################
+  <!-- # See README.md for more information on the parameters -->
+  
+  <!-- # optional param serial, default: -1 -->
+  <arg name="serial"                  default="620709"      />
+
+  <!-- # optional param hub_port, used if connected to a VINT hub -->
+  <arg name="motor_port_left"         default="0"           />
+  <arg name="motor_port_right"        default="1"           />
+
+  <!-- # optional param topicname_prefix, used to specify the topic name  -->
+  <arg name="topicname_prefix_left"   default="motor/left"  />
+  <arg name="topicname_prefix_right"  default="motor/right" />
+
+  <!-- # supported data rates: 4 8 16 24 32 40 ... 1000 (in ms) -->
+  <arg name="data_interval_ms"        default="128"         />
+
+  <!-- # optional param publish_rate, defaults to 0 -->
+  <arg name="publish_rate"            default="100"         />
+
+
+  <!-- # optional param fan_mode, modes: ON/OFF/AUTO, default: AUTO -->
+  <arg name="fan_mode"                default="ON"          />
+
+  <!-- # optional param acceleration, range: 0.1 ... 100.0, default: 1.0 (in dutyCycles / s) -->
+  <arg name="acceleration"            default="0.1"         />
+
+  <!-- # optional param braking_strength, range: 0.0 ... 1.0, default: 0.0 -->
+  <arg name="braking_strength"        default="0.0"         />
+
+  <!-- # optional param current_limit, range: 2.0 ... 25.0 (in A), default: 2.0 -->
+  <arg name="current_limit"           default="2.0"         />
+
+  <!-- # optional param current_regulator_gain, range: 1.0 ... 100.0, default: 10.0 -->
+  <arg name="current_regulator_gain"  default="10.0"        />
+
+
+  #### Nodelet manager ######################################################
+
+  <node pkg="nodelet" type="nodelet" name="motors_manager"
+    args="manager" output="screen" />
+
+  #### Motors Driver ########################################################
+
+  #### Motor Controller 1 ####
+  <node pkg="nodelet" type="nodelet" name="PhidgetsMotorsNodeletLeft"
+    args="load phidgets_motors/PhidgetsMotorsNodelet motors_manager"
+    output="screen">
+
+    <param name="serial"                  value="$(arg serial)"                 />
+    <param name="hub_port"                value="$(arg motor_port_left)"        />
+    <param name="topicname_prefix"        value="$(arg topicname_prefix_left)"  />
+    <param name="data_interval_ms"        value="$(arg data_interval_ms)"       />
+    <param name="publish_rate"            value="$(arg publish_rate)"           />
+
+    <param name="fan_mode"                value="$(arg fan_mode)"               />
+    <param name="acceleration"            value="$(arg acceleration)"           />
+    <param name="braking_strength"        value="$(arg braking_strength)"       />
+    <param name="current_limit"           value="$(arg current_limit)"          />
+    <param name="current_regulator_gain"  value="$(arg current_regulator_gain)" />
+  </node>
+
+  #### Motor Controller 2 ####
+  <node pkg="nodelet" type="nodelet" name="PhidgetsMotorsNodeletRight"
+    args="load phidgets_motors/PhidgetsMotorsNodelet motors_manager"
+    output="screen">
+
+    <param name="serial"                  value="$(arg serial)"                 />
+    <param name="hub_port"                value="$(arg motor_port_right)"       />
+    <param name="topicname_prefix"        value="$(arg topicname_prefix_right)" />
+    <param name="data_interval_ms"        value="$(arg data_interval_ms)"       />
+    <param name="publish_rate"            value="$(arg publish_rate)"           />
+
+    <param name="fan_mode"                value="$(arg fan_mode)"               />
+    <param name="acceleration"            value="$(arg acceleration)"           />
+    <param name="braking_strength"        value="$(arg braking_strength)"       />
+    <param name="current_limit"           value="$(arg current_limit)"          />
+    <param name="current_regulator_gain"  value="$(arg current_regulator_gain)" />
+  </node>
+
+</launch>
