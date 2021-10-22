@@ -27,48 +27,68 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdexcept>
-#include <string>
+#include <memory>
 
 #include <libphidget22/phidget22.h>
 
-#include "phidgets_api/digital_output.h"
+#include "phidgets_api/analog_output.h"
+#include "phidgets_api/analog_outputs.h"
 #include "phidgets_api/phidget22.h"
 
 namespace phidgets {
 
-DigitalOutput::DigitalOutput(int32_t serial_number, int hub_port,
-                             bool is_hub_port_device, int channel)
+AnalogOutputs::AnalogOutputs(int32_t serial_number, int hub_port,
+                             bool is_hub_port_device)
 {
     PhidgetReturnCode ret;
 
-    ret = PhidgetDigitalOutput_create(&do_handle_);
+    PhidgetVoltageOutputHandle ao_handle;
+
+    ret = PhidgetVoltageOutput_create(&ao_handle);
     if (ret != EPHIDGET_OK)
     {
         throw Phidget22Error(
-            "Failed to create DigitalOutput handle for channel " +
-                std::to_string(channel),
+            "Failed to create AnalogOutput handle for determining channel "
+            "count",
             ret);
     }
 
-    helpers::openWaitForAttachment(reinterpret_cast<PhidgetHandle>(do_handle_),
-                                   serial_number, hub_port, is_hub_port_device,
-                                   channel);
-}
+    PhidgetHandle handle = reinterpret_cast<PhidgetHandle>(ao_handle);
 
-DigitalOutput::~DigitalOutput()
-{
-    PhidgetHandle handle = reinterpret_cast<PhidgetHandle>(do_handle_);
+    helpers::openWaitForAttachment(handle, serial_number, hub_port,
+                                   is_hub_port_device, 0);
+
+    ret = Phidget_getDeviceChannelCount(handle, PHIDCHCLASS_VOLTAGEOUTPUT,
+                                        &output_count_);
+
     helpers::closeAndDelete(&handle);
-}
 
-void DigitalOutput::setOutputState(bool state) const
-{
-    PhidgetReturnCode ret = PhidgetDigitalOutput_setState(do_handle_, state);
     if (ret != EPHIDGET_OK)
     {
-        throw Phidget22Error("Failed to set state for DigitalOutput", ret);
+        throw Phidget22Error("Failed to get AnalogOutput device channel count",
+                             ret);
     }
+
+    aos_.resize(output_count_);
+    for (uint32_t i = 0; i < output_count_; ++i)
+    {
+        aos_[i] = std::make_unique<AnalogOutput>(serial_number, hub_port,
+                                                 is_hub_port_device, i);
+    }
+}
+
+AnalogOutputs::~AnalogOutputs()
+{
+}
+
+uint32_t AnalogOutputs::getOutputCount() const noexcept
+{
+    return output_count_;
+}
+
+void AnalogOutputs::setOutputVoltage(int index, double voltage) const
+{
+    aos_.at(index)->setOutputVoltage(voltage);
 }
 
 }  // namespace phidgets
